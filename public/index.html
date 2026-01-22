@@ -307,8 +307,9 @@
             };
             
             try {
-                // API 호출 - 절대 경로 사용
-                const apiUrl = window.location.origin + '/api/generate';
+                // API 호출 - /api 엔드포인트 사용 (모든 POST 요청 처리)
+                const apiUrl = window.location.origin + '/api';
+                console.log('API 호출:', apiUrl, input);
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
@@ -336,9 +337,18 @@
                     throw new Error(data.message || '문서 생성에 실패했습니다.');
                 }
             } catch (error) {
-                errorDiv.textContent = `오류: ${error.message}`;
+                let errorMessage = `오류: ${error.message}`;
+                if (error.stack) {
+                    console.error('Full error:', error);
+                    errorMessage += `\n\n상세 정보는 브라우저 콘솔(F12)을 확인하세요.`;
+                }
+                errorDiv.textContent = errorMessage;
                 errorDiv.classList.add('show');
-                console.error('Error:', error);
+                console.error('API Error Details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    url: apiUrl
+                });
             } finally {
                 loading.classList.remove('show');
                 generateBtn.disabled = false;

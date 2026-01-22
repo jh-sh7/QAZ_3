@@ -16,7 +16,7 @@ def handler(request):
     """
     Vercel Serverless Function Handler
     
-    /api/generate 요청을 처리하거나 기본 API 정보를 반환
+    모든 /api/* 요청을 처리합니다.
     """
     # CORS 헤더 설정
     headers = {
@@ -34,36 +34,74 @@ def handler(request):
             'body': ''
         }
     
-    # /api/generate 경로 처리
-    path = getattr(request, 'path', '') or getattr(request, 'url', '')
-    if '/generate' in path and request.method == 'POST':
-        try:
+    try:
+        # POST 요청 처리 (문서 생성)
+        if request.method == 'POST':
             # 요청 본문 파싱
             body = {}
-            if hasattr(request, 'body'):
-                if isinstance(request.body, str):
-                    try:
+            try:
+                if hasattr(request, 'body'):
+                    if isinstance(request.body, str):
+                        body = json.loads(request.body) if request.body else {}
+                    elif isinstance(request.body, dict):
+                        body = request.body
+                    elif request.body:
                         body = json.loads(request.body)
-                    except:
-                        body = {}
-                elif isinstance(request.body, dict):
-                    body = request.body
-                elif request.body:
-                    try:
-                        body = json.loads(request.body)
-                    except:
-                        body = {}
+            except json.JSONDecodeError as e:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'success': False,
+                        'message': f'JSON 파싱 오류: {str(e)}'
+                    }, ensure_ascii=False)
+                }
             
             # 사용자 입력 추출
             user_input = body.get('input', {})
+            if not user_input:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'success': False,
+                        'message': '입력 데이터가 없습니다. "input" 필드가 필요합니다.'
+                    }, ensure_ascii=False)
+                }
+            
             # 안전장치: 항상 'mock' 사용 (요금 방지)
             llm_provider_type = 'mock'
             
             # 문서 생성기 초기화
-            formatter = DocumentAutoFormatter(llm_provider_type=llm_provider_type)
+            try:
+                formatter = DocumentAutoFormatter(llm_provider_type=llm_provider_type)
+            except Exception as e:
+                return {
+                    'statusCode': 500,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'success': False,
+                        'message': f'문서 생성기 초기화 실패: {str(e)}'
+                    }, ensure_ascii=False)
+                }
             
             # 문서 생성
-            result = formatter.generate(user_input)
+            try:
+                result = formatter.generate(user_input)
+            except Exception as e:
+                import traceback
+                error_trace = traceback.format_exc()
+                print(f"Document generation error: {str(e)}")
+                print(f"Traceback: {error_trace}")
+                return {
+                    'statusCode': 500,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'success': False,
+                        'message': f'문서 생성 오류: {str(e)}',
+                        'error_type': type(e).__name__
+                    }, ensure_ascii=False)
+                }
             
             # 응답 반환
             return {
@@ -75,41 +113,45 @@ def handler(request):
                     'message': '문서가 성공적으로 생성되었습니다.'
                 }, ensure_ascii=False)
             }
-        except Exception as e:
-            import traceback
-            error_msg = str(e)
-            traceback.print_exc()
+        
+        # GET 요청 처리 (헬스 체크)
+        elif request.method == 'GET':
             return {
-                'statusCode': 500,
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': True,
+                    'message': 'Document Auto Formatter API is running',
+                    'version': '1.0.0',
+                    'endpoints': {
+                        'generate': '/api (POST) - 문서 생성',
+                        'health': '/api (GET) - 상태 확인'
+                    }
+                }, ensure_ascii=False)
+            }
+        
+        else:
+            return {
+                'statusCode': 405,
                 'headers': headers,
                 'body': json.dumps({
                     'success': False,
-                    'message': f'서버 오류: {error_msg}'
+                    'message': 'Method not allowed'
                 }, ensure_ascii=False)
             }
     
-    # GET 요청 처리 (헬스 체크)
-    if request.method == 'GET':
+    except Exception as e:
+        import traceback
+        error_msg = str(e)
+        error_trace = traceback.format_exc()
+        print(f"Unexpected error: {error_msg}")
+        print(f"Traceback: {error_trace}")
         return {
-            'statusCode': 200,
+            'statusCode': 500,
             'headers': headers,
             'body': json.dumps({
-                'success': True,
-                'message': 'Document Auto Formatter API is running',
-                'version': '1.0.0',
-                'endpoints': {
-                    'generate': '/api/generate (POST)',
-                    'health': '/api (GET)'
-                }
+                'success': False,
+                'message': f'서버 오류: {error_msg}',
+                'error_type': type(e).__name__
             }, ensure_ascii=False)
         }
-    
-    # 기본 응답
-    return {
-        'statusCode': 404,
-        'headers': headers,
-        'body': json.dumps({
-            'success': False,
-            'message': 'Endpoint not found. Use /api/generate for document generation.'
-        }, ensure_ascii=False)
-    }
