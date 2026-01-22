@@ -1,5 +1,6 @@
 """
 Vercel Serverless Function for Document Auto Formatter API
+모든 /api/* 요청을 처리합니다.
 """
 import sys
 import os
@@ -17,6 +18,8 @@ def handler(request):
     Vercel Serverless Function Handler
     
     모든 /api/* 요청을 처리합니다.
+    POST 요청: 문서 생성
+    GET 요청: 헬스 체크
     """
     # CORS 헤더 설정
     headers = {
@@ -76,6 +79,9 @@ def handler(request):
             try:
                 formatter = DocumentAutoFormatter(llm_provider_type=llm_provider_type)
             except Exception as e:
+                import traceback
+                error_trace = traceback.format_exc()
+                print(f"Formatter initialization error: {error_trace}")
                 return {
                     'statusCode': 500,
                     'headers': headers,

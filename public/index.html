@@ -307,7 +307,8 @@
             };
             
             // API URL 정의 (스코프 문제 해결)
-            const apiUrl = window.location.origin + '/api/generate';
+            // /api 엔드포인트 사용 (api/index.py가 모든 요청 처리)
+            const apiUrl = window.location.origin + '/api';
             console.log('API 호출:', apiUrl, input);
             
             try {
