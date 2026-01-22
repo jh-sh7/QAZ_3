@@ -1,22 +1,12 @@
 {
-  "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/*.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/generate",
-      "dest": "api/generate.py"
+      "source": "/api/generate",
+      "destination": "/api/generate.py"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "api/index.py"
+      "source": "/api/(.*)",
+      "destination": "/api/index.py"
     }
-  ],
-  "env": {
-    "PYTHON_VERSION": "3.9"
-  }
+  ]
 }
