@@ -49,7 +49,10 @@ def handler(request):
                 elif isinstance(request.body, dict):
                     body = request.body
                 elif request.body:
-                    body = json.loads(request.body)
+                    try:
+                        body = json.loads(request.body)
+                    except:
+                        body = {}
             
             # 사용자 입력 추출
             user_input = body.get('input', {})
