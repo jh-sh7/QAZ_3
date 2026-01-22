@@ -52,6 +52,13 @@
             margin-bottom: 30px;
         }
         
+        .form-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
         .form-group {
             margin-bottom: 20px;
         }
@@ -80,34 +87,6 @@
         textarea {
             resize: vertical;
             min-height: 100px;
-        }
-        
-        .keywords-input {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .keyword-tag {
-            background: #667eea;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .keyword-tag button {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 16px;
-            padding: 0;
-            width: 18px;
-            height: 18px;
         }
         
         .btn {
@@ -340,6 +319,10 @@
                     })
                 });
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 
                 if (data.success) {
@@ -352,6 +335,7 @@
             } catch (error) {
                 errorDiv.textContent = `오류: ${error.message}`;
                 errorDiv.classList.add('show');
+                console.error('Error:', error);
             } finally {
                 loading.classList.remove('show');
                 generateBtn.disabled = false;

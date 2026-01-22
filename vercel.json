@@ -14,10 +14,12 @@
     {
       "src": "/api/(.*)",
       "dest": "api/index.py"
-    },
+    }
+  ],
+  "rewrites": [
     {
-      "src": "/",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/public/$1"
     }
   ],
   "env": {
