@@ -307,8 +307,9 @@
             };
             
             try {
-                // API 호출
-                const response = await fetch('/api/generate', {
+                // API 호출 - 절대 경로 사용
+                const apiUrl = window.location.origin + '/api/generate';
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -320,7 +321,9 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('API Error:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
                 }
                 
                 const data = await response.json();
