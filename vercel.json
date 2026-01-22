@@ -16,12 +16,6 @@
       "dest": "api/index.py"
     }
   ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/public/$1"
-    }
-  ],
   "env": {
     "PYTHON_VERSION": "3.9"
   }
