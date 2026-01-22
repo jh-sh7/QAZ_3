@@ -307,8 +307,8 @@
             };
             
             try {
-                // API 호출 - /api 엔드포인트 사용 (모든 POST 요청 처리)
-                const apiUrl = window.location.origin + '/api';
+                // API 호출 - /api/generate 엔드포인트 사용
+                const apiUrl = window.location.origin + '/api/generate';
                 console.log('API 호출:', apiUrl, input);
                 const response = await fetch(apiUrl, {
                     method: 'POST',

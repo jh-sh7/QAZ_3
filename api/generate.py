@@ -36,24 +36,69 @@ def handler(request):
         if request.method == 'POST':
             # 요청 본문 파싱
             body = {}
-            if hasattr(request, 'body'):
-                if isinstance(request.body, str):
-                    body = json.loads(request.body)
-                elif isinstance(request.body, dict):
-                    body = request.body
-                elif request.body:
-                    body = json.loads(request.body)
+            try:
+                if hasattr(request, 'body'):
+                    if isinstance(request.body, str):
+                        body = json.loads(request.body) if request.body else {}
+                    elif isinstance(request.body, dict):
+                        body = request.body
+                    elif request.body:
+                        body = json.loads(request.body)
+            except json.JSONDecodeError as e:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'success': False,
+                        'message': f'JSON 파싱 오류: {str(e)}'
+                    }, ensure_ascii=False)
+                }
             
             # 사용자 입력 추출
             user_input = body.get('input', {})
+            if not user_input:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'success': False,
+                        'message': '입력 데이터가 없습니다. "input" 필드가 필요합니다.'
+                    }, ensure_ascii=False)
+                }
+            
             # 안전장치: 항상 'mock' 사용 (요금 방지)
             llm_provider_type = 'mock'  # 강제로 mock 사용
             
             # 문서 생성기 초기화
-            formatter = DocumentAutoFormatter(llm_provider_type=llm_provider_type)
+            try:
+                formatter = DocumentAutoFormatter(llm_provider_type=llm_provider_type)
+            except Exception as e:
+                return {
+                    'statusCode': 500,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'success': False,
+                        'message': f'문서 생성기 초기화 실패: {str(e)}'
+                    }, ensure_ascii=False)
+                }
             
             # 문서 생성
-            result = formatter.generate(user_input)
+            try:
+                result = formatter.generate(user_input)
+            except Exception as e:
+                import traceback
+                error_trace = traceback.format_exc()
+                print(f"Document generation error: {str(e)}")
+                print(f"Traceback: {error_trace}")
+                return {
+                    'statusCode': 500,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'success': False,
+                        'message': f'문서 생성 오류: {str(e)}',
+                        'error_type': type(e).__name__
+                    }, ensure_ascii=False)
+                }
             
             # 응답 반환
             return {
@@ -78,12 +123,15 @@ def handler(request):
     except Exception as e:
         import traceback
         error_msg = str(e)
-        traceback.print_exc()
+        error_trace = traceback.format_exc()
+        print(f"Unexpected error in generate.py: {error_msg}")
+        print(f"Traceback: {error_trace}")
         return {
             'statusCode': 500,
             'headers': headers,
             'body': json.dumps({
                 'success': False,
-                'message': f'서버 오류: {error_msg}'
+                'message': f'서버 오류: {error_msg}',
+                'error_type': type(e).__name__
             }, ensure_ascii=False)
         }
