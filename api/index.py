@@ -45,7 +45,10 @@ def handler(request):
             body = {}
             if hasattr(request, 'body'):
                 if isinstance(request.body, str):
-                    body = json.loads(request.body)
+                    try:
+                        body = json.loads(request.body)
+                    except:
+                        body = {}
                 elif isinstance(request.body, dict):
                     body = request.body
                 elif request.body:
