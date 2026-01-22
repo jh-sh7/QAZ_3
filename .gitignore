@@ -41,8 +41,9 @@ Thumbs.db
 output_document.txt
 output_document.md
 *.txt
-*.md
-!README.md
+# 배포 가이드 파일은 포함
+# *.md
+# !README.md
 
 # Environment variables
 .env
