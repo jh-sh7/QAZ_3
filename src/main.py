@@ -19,6 +19,13 @@ class DocumentAutoFormatter:
     """문서 자동 포맷 생성기 메인 클래스"""
     
     def __init__(self, llm_provider_type: str = "mock", **llm_kwargs):
+        # 안전장치: 요금 방지를 위해 기본값은 항상 'mock'
+        if llm_provider_type != "mock":
+            import os
+            # OpenAI 사용 시 환경 변수 확인
+            if llm_provider_type == "openai" and not os.getenv("OPENAI_API_KEY"):
+                print("경고: OPENAI_API_KEY가 설정되지 않았습니다. Mock Provider를 사용합니다.")
+                llm_provider_type = "mock"
         """
         초기화
         

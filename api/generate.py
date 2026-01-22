@@ -46,7 +46,8 @@ def handler(request):
             
             # 사용자 입력 추출
             user_input = body.get('input', {})
-            llm_provider_type = body.get('llm_provider_type', 'mock')
+            # 안전장치: 항상 'mock' 사용 (요금 방지)
+            llm_provider_type = 'mock'  # 강제로 mock 사용
             
             # 문서 생성기 초기화
             formatter = DocumentAutoFormatter(llm_provider_type=llm_provider_type)

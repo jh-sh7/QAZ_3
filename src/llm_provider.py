@@ -100,10 +100,29 @@ def get_llm_provider(provider_type: str = "mock", **kwargs) -> LLMProvider:
     
     Returns:
         LLMProvider 인스턴스
+    
+    주의: 요금 방지를 위해 기본값은 항상 'mock'입니다.
     """
+    # 안전장치: 요금 방지를 위해 항상 mock 사용
+    # OpenAI를 사용하려면 명시적으로 provider_type='openai'를 전달하고
+    # 환경 변수 OPENAI_API_KEY가 설정되어 있어야 합니다.
+    
+    # 환경 변수 확인: OPENAI_API_KEY가 없으면 강제로 mock 사용
+    import os
+    if provider_type == "openai" and not os.getenv("OPENAI_API_KEY"):
+        print("경고: OPENAI_API_KEY가 설정되지 않았습니다. Mock Provider를 사용합니다.")
+        return MockLLMProvider()
+    
     if provider_type == "mock":
         return MockLLMProvider()
     elif provider_type == "openai":
+        # 추가 안전장치: API 키 확인
+        api_key = kwargs.get('api_key') or os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            print("경고: OpenAI API 키가 없습니다. Mock Provider를 사용합니다.")
+            return MockLLMProvider()
         return OpenAIProvider(**kwargs)
     else:
-        raise ValueError(f"지원하지 않는 제공자 타입: {provider_type}")
+        # 알 수 없는 타입은 mock으로 폴백
+        print(f"경고: 알 수 없는 provider_type '{provider_type}'. Mock Provider를 사용합니다.")
+        return MockLLMProvider()
