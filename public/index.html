@@ -306,10 +306,11 @@
                     .filter(c => c)
             };
             
+            // API URL 정의 (스코프 문제 해결)
+            const apiUrl = window.location.origin + '/api/generate';
+            console.log('API 호출:', apiUrl, input);
+            
             try {
-                // API 호출 - /api/generate 엔드포인트 사용
-                const apiUrl = window.location.origin + '/api/generate';
-                console.log('API 호출:', apiUrl, input);
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
