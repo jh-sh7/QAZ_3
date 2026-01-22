@@ -1,6 +1,5 @@
 """
 Vercel Serverless Function for Document Auto Formatter API
-모든 /api/* 요청을 처리합니다.
 """
 import sys
 import os
@@ -10,16 +9,24 @@ import json
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
-from src.main import DocumentAutoFormatter
+try:
+    from src.main import DocumentAutoFormatter
+except ImportError as e:
+    print(f"Import error: {e}")
+    print(f"Python path: {sys.path}")
+    print(f"Project root: {project_root}")
+    raise
 
 
 def handler(request):
     """
     Vercel Serverless Function Handler
     
-    모든 /api/* 요청을 처리합니다.
-    POST 요청: 문서 생성
-    GET 요청: 헬스 체크
+    Args:
+        request: Vercel request object with method, headers, body attributes
+    
+    Returns:
+        Response dict with statusCode, headers, body
     """
     # CORS 헤더 설정
     headers = {
