@@ -1,12 +1,12 @@
 """
-Vercel Serverless Function for Document Auto Formatter API
+Vercel Serverless Function - Document Generation Endpoint
 """
 import sys
 import os
 import json
 
 # 프로젝트 루트를 경로에 추가
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, project_root)
 
 from src.main import DocumentAutoFormatter
@@ -14,9 +14,7 @@ from src.main import DocumentAutoFormatter
 
 def handler(request):
     """
-    Vercel Serverless Function Handler
-    
-    /api/generate 요청을 처리하거나 기본 API 정보를 반환
+    Vercel Serverless Function Handler for document generation
     """
     # CORS 헤더 설정
     headers = {
@@ -26,7 +24,7 @@ def handler(request):
         'Access-Control-Allow-Headers': 'Content-Type',
     }
     
-    # OPTIONS 요청 처리 (CORS preflight)
+    # OPTIONS 요청 처리
     if request.method == 'OPTIONS':
         return {
             'statusCode': 200,
@@ -34,10 +32,8 @@ def handler(request):
             'body': ''
         }
     
-    # /api/generate 경로 처리
-    path = getattr(request, 'path', '') or getattr(request, 'url', '')
-    if '/generate' in path and request.method == 'POST':
-        try:
+    try:
+        if request.method == 'POST':
             # 요청 본문 파싱
             body = {}
             if hasattr(request, 'body'):
@@ -57,7 +53,7 @@ def handler(request):
             # 사용자 입력 추출
             user_input = body.get('input', {})
             # 안전장치: 항상 'mock' 사용 (요금 방지)
-            llm_provider_type = 'mock'
+            llm_provider_type = 'mock'  # 강제로 mock 사용
             
             # 문서 생성기 초기화
             formatter = DocumentAutoFormatter(llm_provider_type=llm_provider_type)
@@ -75,41 +71,25 @@ def handler(request):
                     'message': '문서가 성공적으로 생성되었습니다.'
                 }, ensure_ascii=False)
             }
-        except Exception as e:
-            import traceback
-            error_msg = str(e)
-            traceback.print_exc()
+        else:
             return {
-                'statusCode': 500,
+                'statusCode': 405,
                 'headers': headers,
                 'body': json.dumps({
                     'success': False,
-                    'message': f'서버 오류: {error_msg}'
+                    'message': 'Method not allowed'
                 }, ensure_ascii=False)
             }
     
-    # GET 요청 처리 (헬스 체크)
-    if request.method == 'GET':
+    except Exception as e:
+        import traceback
+        error_msg = str(e)
+        traceback.print_exc()
         return {
-            'statusCode': 200,
+            'statusCode': 500,
             'headers': headers,
             'body': json.dumps({
-                'success': True,
-                'message': 'Document Auto Formatter API is running',
-                'version': '1.0.0',
-                'endpoints': {
-                    'generate': '/api/generate (POST)',
-                    'health': '/api (GET)'
-                }
+                'success': False,
+                'message': f'서버 오류: {error_msg}'
             }, ensure_ascii=False)
         }
-    
-    # 기본 응답
-    return {
-        'statusCode': 404,
-        'headers': headers,
-        'body': json.dumps({
-            'success': False,
-            'message': 'Endpoint not found. Use /api/generate for document generation.'
-        }, ensure_ascii=False)
-    }
